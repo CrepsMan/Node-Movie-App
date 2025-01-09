@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= movie.Navn %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1><%= movie.Navn %></h1>
+        <img src="<%= movie.poster %>" alt="<%= movie.Navn %> Poster" />
+        <p>Rating: <span id="average-rating" class="rating"><%= movie.rating %></span>/10</p>
+
+        <div class="stars" id="star-rating">
+            <% for (let i = 1; i <= 10; i++) { %>
+                <span class="star" data-value="<%= i %>">&#9733;</span>
+            <% } %>
+        </div>
+
+        <form id="rating-form">
+            <input type="hidden" name="movieId" value="<%= movie.ID %>">
+            <input type="hidden" id="rating" name="rating" value="">
+            <button type="submit">Submit Rating</button>
+        </form>
+
+        <button id="new-movie-button">Get New Movie</button>
+    </div>
+
+    <script>
+        document.getElementById('rating-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const rating = document.getElementById('rating').value;
+            const movieId = '<%= movie.ID %>';
+
+            try {
+                const response = await fetch('/movies/rate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ movieId, rating })
+                });
+
+                if (response.ok) {
+                    const updatedMovie = await response.json();
+                    document.getElementById('average-rating').textContent = updatedMovie.rating;
+                } else {
+                    alert('Error submitting rating');
+                }
+            } catch (error) {
+                alert('Error submitting rating');
+            }
+        });
+
+        document.querySelectorAll('.star').forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.getAttribute('data-value');
+                document.getElementById('rating').value = rating;
+                document.querySelectorAll('.star').forEach(s => {
+                    s.classList.remove('selected');
+                });
+                for (let i = 0; i < rating; i++) {
+                    document.querySelectorAll('.star')[i].classList.add('selected');
+                }
+            });
+        });
+
+        document.getElementById('new-movie-button').addEventListener('click', function() {
+            window.location.href = '/movies/random';
+        });
+    </script>
+</body>
+</html>
